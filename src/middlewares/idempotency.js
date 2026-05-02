@@ -40,6 +40,9 @@ async function idempotencyMiddleware(req,res,next) {
                     body,
                     statusCode: res.statusCode
                 }))
+
+                //clearing the waiters array
+                store.updateEntry(idempotencyKey, {waiters: []})
             }
 
             return originalJSON(body)
@@ -48,7 +51,7 @@ async function idempotencyMiddleware(req,res,next) {
         return next()
     }
 
-    if(existing.hashBody === incomingHash){
+    if(existing.hashBody !== incomingHash){
         return res.status(422).json({
             error: "Idempotency key already used for a different request body"
         })
@@ -62,6 +65,7 @@ async function idempotencyMiddleware(req,res,next) {
     if(existing.status === 'processing'){
         const result = await new Promise(resolve => {
             existing.waiters.push(resolve)
+            store.updateEntry(idempotencyKey, {waiters: existing.waiters})
         })
 
         res.set('X-Cache-Hit','true')
