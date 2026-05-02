@@ -51,7 +51,7 @@ async function idempotencyMiddleware(req,res,next) {
         return next()
     }
 
-    if(existing.hashBody !== incomingHash){
+    if(existing.bodyHash !== incomingHash){
         return res.status(422).json({
             error: "Idempotency key already used for a different request body"
         })
