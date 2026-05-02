@@ -1,12 +1,22 @@
 const express = require("express")
 require("dotenv").config()
 const rateLimit = require("express-rate-limit")
-const paymentRoute = require("./routes/payment")
+const paymentRoute = require("./src/routes/payment")
 
 const app = express()
 
 //Middleware
 app.use(express.json())
+
+//error handlers
+process.on("uncaughtException", err => {
+    console.log(err)
+    process.exit(1)
+})
+
+process.on("unhandledRejection", (reason,rejection) => {
+    console.log(reason)
+})
 
 //Rate limiter
 const limiter = rateLimit({
@@ -26,6 +36,8 @@ app.use("/", paymentRoute)
 
 //Global error handler
 app.use((err, req, res, next) => {
+    console.log(err.message)
+    console.log(err.stack)
     return res.status(500).json({
         error: "Internal server error."
     })
